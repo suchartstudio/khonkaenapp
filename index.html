@@ -181,7 +181,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-  import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+  import { getDatabase, ref, onValue, push, set, onDisconnect } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMptdLpLEdbeVFKZj82M0gyoV2m_2y5Pk",
@@ -226,6 +226,10 @@
     setTimeout(() => map.invalidateSize(), 300);
   };
 
+  // --- เพิ่มส่วนลงทะเบียน Realtime User Presence ---
+  const userSessionId = 'usr_' + Math.random().toString(36).substring(2, 9);
+  const userPresenceRef = ref(db, `active_users/${userSessionId}`);
+
   navigator.geolocation.getCurrentPosition((pos) => {
     userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
     L.circleMarker(userLatLng, {
@@ -233,6 +237,27 @@
     }).addTo(map).bindPopup("📍 ตำแหน่งปัจจุบันของคุณ");
     map.setView(userLatLng, 13);
     
+    // ส่งพิกัดเข้า Firebase หน้า Monitor
+    set(userPresenceRef, {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      lastPing: Date.now()
+    });
+
+    // ลบข้อมูลเมื่อปิดเว็บ
+    onDisconnect(userPresenceRef).remove();
+
+    // Heartbeat ping ทุก 30 วินาที
+    setInterval(() => {
+      if (userLatLng) {
+        set(userPresenceRef, {
+          lat: userLatLng.lat,
+          lng: userLatLng.lng,
+          lastPing: Date.now()
+        });
+      }
+    }, 30000);
+
     checkNewsProximity();
     if(allPlaces.length > 0) renderPlaces();
   }, (err) => {
