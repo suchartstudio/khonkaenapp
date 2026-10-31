@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบส่งพิกัดเจ้าหน้าที่ - KK Smart City</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --primary: #0ea5e9; --bg-dark: #09090b; --card-dark: #18181b; 
+      --text-main: #f4f4f5; --text-muted: #a1a1aa; --danger: #ef4444; --success: #10b981; --border-color: #3f3f46;
+    }
+    body { font-family: 'Kanit', sans-serif; background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box; justify-content: center; align-items: center; }
+    
+    .card { background: var(--card-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    h2 { color: var(--primary); margin-top: 0; text-align: center; font-size: 1.4rem; }
+    
+    label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-family: 'Kanit'; font-size: 0.95rem; box-sizing: border-box; margin-bottom: 15px; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+    
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-family: 'Kanit'; font-size: 1rem; font-weight: 500; cursor: pointer; transition: 0.2s; }
+    .btn-start { background: var(--success); color: white; }
+    .btn-stop { background: var(--danger); color: white; display: none; }
+    
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; text-align: center; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
+    .status-off { background: #3f3f46; color: var(--text-muted); }
+    .status-on { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+    /* Modal ข้อความคำสั่ง */
+    .command-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+    .command-box { background: var(--card-dark); border: 2px solid var(--danger); border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+    .command-header { color: var(--danger); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+    .command-text { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🚔 ระบบเจ้าหน้าที่สนาม</h2>
+    
+    <div id="status-tag" class="status-badge status-off">🔴 ปิดการเชื่อมต่อระบบ GPS</div>
+    
+    <div id="form-section">
+      <label>ชื่อ-นามสกุล / รหัสเรียกขาน</label>
+      <input type="text" id="staff-name" placeholder="เช่น ด.ต. สมชาย สายตรวจ">
+      
+      <label>หน่วยงานสังกัด</label>
+      <select id="staff-dept">
+        <option value="ตำรวจ">ตำรวจ / สายตรวจ</option>
+        <option value="กู้ภัย">กู้ชีพ / กู้ภัย / ดับเพลิง</option>
+        <option value="พยาบาล">แพทย์ / พยาบาล / EHS</option>
+        <option value="ปกครอง">ฝ่ายปกครอง / เทศกิจ</option>
+        <option value="อื่นๆ">อื่นๆ</option>
+      </select>
+      
+      <button class="btn btn-start" id="btn-toggle" onclick="toggleTracking()">🟢 เริ่มส่งพิกัดเข้าศูนย์ควบคุม</button>
+    </div>
+  </div>
+
+  <!-- Modal แสดงคำสั่งสั่งการ -->
+  <div class="command-modal" id="cmd-modal">
+    <div class="command-box">
+      <div class="command-header">🚨 คำสั่งสั่งการจากศูนย์ควบคุม</div>
+      <div class="command-text" id="cmd-msg-body">-</div>
+      <button class="btn btn-start" onclick="ackCommand()">รับทราบคำสั่ง</button>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+  import { getDatabase, ref, set, update, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMptdLpLEdbeVFKZj82M0gyoV2m_2y5Pk", authDomain: "suchartstudio-9a78d.firebaseapp.com",
+    databaseURL: "https://suchartstudio-9a78d-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "suchartstudio-9a78d",
+    storageBucket: "suchartstudio-9a78d.firebasestorage.app", messagingSenderId: "953369646185", appId: "1:953369646185:web:02e6872662daa81f6ebef8"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let watchId = null;
+  let isTracking = false;
+  let staffId = localStorage.getItem('staff_session_id') || ('stf_' + Math.random().toString(36).substring(2, 9));
+  localStorage.setItem('staff_session_id', staffId);
+
+  window.toggleTracking = function() {
+    if (!isTracking) {
+      const name = document.getElementById('staff-name').value.trim();
+      const dept = document.getElementById('staff-dept').value;
+      if (!name) return alert('กรุณาระบุชื่อหรือรหัสเรียกขาน');
+
+      if ("geolocation" in navigator) {
+        isTracking = true;
+        document.getElementById('status-tag').className = 'status-badge status-on';
+        document.getElementById('status-tag').innerText = '🟢 กำลังส่งพิกัดเรียลไทม์...';
+        document.getElementById('btn-toggle').innerText = '🔴 หยุดส่งพิกัด';
+        document.getElementById('btn-toggle').className = 'btn btn-stop';
+        document.getElementById('staff-name').disabled = true;
+        document.getElementById('staff-dept').disabled = true;
+
+        const staffRef = ref(db, `personnel/${staffId}`);
+        onDisconnect(staffRef).remove(); // ลบพิกัดเมื่อปิดหน้าเว็บ
+
+        watchId = navigator.geolocation.watchPosition(pos => {
+          set(staffRef, {
+            id: staffId,
+            name: name,
+            dept: dept,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            lastPing: Date.now()
+          });
+        }, err => console.warn(err), { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+
+        // ฟังคำสั่งจากศูนย์ควบคุม
+        onValue(ref(db, `personnel/${staffId}/message`), snap => {
+          if (snap.exists() && snap.val()) {
+            document.getElementById('cmd-msg-body').innerText = snap.val();
+            document.getElementById('cmd-modal').style.display = 'flex';
+          }
+        });
+
+      } else {
+        alert('อุปกรณ์ของคุณไม่รองรับระบบระบุพิกัด GPS');
+      }
+    } else {
+      stopTracking();
+    }
+  };
+
+  function stopTracking() {
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+    remove(ref(db, `personnel/${staffId}`));
+    isTracking = false;
+    document.getElementById('status-tag').className = 'status-badge status-off';
+    document.getElementById('status-tag').innerText = '🔴 ปิดการเชื่อมต่อระบบ GPS';
+    document.getElementById('btn-toggle').innerText = '🟢 เริ่มส่งพิกัดเข้าศูนย์ควบคุม';
+    document.getElementById('btn-toggle').className = 'btn btn-start';
+    document.getElementById('staff-name').disabled = false;
+    document.getElementById('staff-dept').disabled = false;
+  }
+
+  window.ackCommand = function() {
+    document.getElementById('cmd-modal').style.display = 'none';
+    remove(ref(db, `personnel/${staffId}/message`)); // เคลียร์ข้อความคำสั่ง
+  };
+</script>
+</body>
+</html>
