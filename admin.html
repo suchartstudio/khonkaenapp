@@ -11,7 +11,7 @@
       --primary: #0ea5e9; --primary-hover: #0284c7;
       --bg-dark: #09090b; --card-dark: #18181b; --card-light: #27272a;
       --text-main: #f4f4f5; --text-muted: #a1a1aa;
-      --danger: #ef4444; --warning: #f59e0b; --border-color: #3f3f46; --success: #10b981;
+      --danger: #ef4444; --warning: #f59e0b; --border-color: #3f3f46; --success: #10b981; --radar: #06b6d4;
     }
     body { font-family: 'Kanit', sans-serif; margin: 0; padding: 10px; background-color: var(--bg-dark); color: var(--text-main); font-size: 0.9rem; }
     #admin-content { max-width: 1400px; margin: 0 auto; }
@@ -19,8 +19,8 @@
     .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 10px; }
     .admin-header h2 { color: var(--primary); margin: 0; font-size: 1.3rem; }
     
-    .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-    .tab-btn { background: var(--card-light); color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; font-weight: 500; transition: 0.2s; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; }
+    .tab-btn { background: var(--card-light); color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; font-weight: 500; transition: 0.2s; white-space: nowrap; }
     .tab-btn:hover { background: var(--card-dark); color: var(--text-main); }
     .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .tab-content { display: none; }
@@ -58,6 +58,16 @@
     .review-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; }
     .review-stars { color: var(--warning); letter-spacing: 2px; }
 
+    /* CSS Radar Pulse Animation for Users Monitor */
+    .custom-radar-icon { background: none; border: none; }
+    .radar-marker-container { position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+    .radar-dot { width: 10px; height: 10px; background-color: var(--radar); border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px var(--radar); z-index: 2; }
+    .radar-ring { position: absolute; width: 28px; height: 28px; border: 2px solid var(--radar); border-radius: 50%; background: rgba(6, 182, 212, 0.35); animation: radar-pulse 1.8s infinite ease-out; z-index: 1; }
+    @keyframes radar-pulse {
+      0% { transform: scale(0.3); opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; justify-content: center; align-items: center; }
     .modal-content { background: var(--card-dark); padding: 15px; border-radius: 8px; width: 90%; max-width: 450px; border: 1px solid var(--border-color); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 10px; }
@@ -80,6 +90,7 @@
     <button class="tab-btn active" id="btn-tab-places" onclick="switchTab('places')">📍 จัดการสถานที่</button>
     <button class="tab-btn" id="btn-tab-news" onclick="switchTab('news')">⚠️ ข่าวประกาศ/แจ้งเตือน</button>
     <button class="tab-btn" id="btn-tab-reviews" onclick="switchTab('reviews')">⭐ จัดการรีวิว</button>
+    <button class="tab-btn" id="btn-tab-users" onclick="switchTab('users')" style="border-color:var(--radar); color:var(--radar);">📡 Monitor ผู้ใช้งาน (Realtime)</button>
   </div>
   
   <!-- TAB 1: PLACES -->
@@ -156,6 +167,17 @@
     </div>
   </div>
 
+  <!-- TAB 4: REALTIME USER MONITORING -->
+  <div id="content-users" class="tab-content">
+    <div class="panel" style="padding:10px;">
+      <div class="panel-header">
+        <h3 style="color:var(--radar);">📡 ติดตามผู้ใช้งานออนไลน์แบบ Realtime (<span id="total-active-users">0</span> คน)</h3>
+        <span style="font-size:0.8rem; color:var(--text-muted);">*แสดงตำแหน่งผู้ใช้พร้อมสัญญาณเรดาร์กระพริบ (อัปเดตอัตโนมัติ)</span>
+      </div>
+      <div id="map-users-monitor" style="height: calc(100vh - 170px); width:100%; border-radius:6px; border:1px solid var(--border-color); background:#e5e5e5;"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Modal Category -->
@@ -194,6 +216,7 @@
     
     if(tabName === 'places') mapPlaces.invalidateSize();
     if(tabName === 'news') mapNews.invalidateSize();
+    if(tabName === 'users') mapUsersMonitor.invalidateSize();
   };
 
   // PLACES SYSTEM
@@ -290,31 +313,18 @@
     const durationDays = parseFloat(document.getElementById('news-duration').value) || 1;
     
     if(!title || !desc || !nLat) return alert('กรอกข้อมูลและปักหมุดบนแผนที่ให้ครบ');
-    
     const endTimestamp = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
 
     const payload = { 
-      title, 
-      description: desc, 
-      lat: nLat, 
-      lng: nLng, 
-      radius: rad, 
-      durationDays: durationDays,
-      endDate: endTimestamp,
-      image: currentNewsImg || existingNewsImg, 
-      timestamp: Date.now() 
+      title, description: desc, lat: nLat, lng: nLng, radius: rad, 
+      durationDays: durationDays, endDate: endTimestamp,
+      image: currentNewsImg || existingNewsImg, timestamp: Date.now() 
     };
 
     if(editNewsId) {
-      update(ref(db, `news/${editNewsId}`), payload).then(() => {
-        alert('อัปเดตข่าวประกาศสำเร็จ');
-        cancelEditNews();
-      });
+      update(ref(db, `news/${editNewsId}`), payload).then(() => { alert('อัปเดตข่าวประกาศสำเร็จ'); cancelEditNews(); });
     } else {
-      push(ref(db, 'news'), payload).then(() => { 
-        alert('ส่งประกาศสำเร็จ'); 
-        cancelEditNews();
-      });
+      push(ref(db, 'news'), payload).then(() => { alert('ส่งประกาศสำเร็จ'); cancelEditNews(); });
     }
   });
 
@@ -339,12 +349,8 @@
 
   window.cancelEditNews = function() {
     editNewsId = null; existingNewsImg = ""; currentNewsImg = "";
-    document.getElementById('news-title').value = '';
-    document.getElementById('news-desc').value = '';
-    document.getElementById('news-radius').value = '50';
-    document.getElementById('news-duration').value = '1';
-    document.getElementById('news-img').value = '';
-    
+    document.getElementById('news-title').value = ''; document.getElementById('news-desc').value = '';
+    document.getElementById('news-radius').value = '50'; document.getElementById('news-duration').value = '1'; document.getElementById('news-img').value = '';
     document.getElementById('edit-banner-news').style.display = 'none';
     document.getElementById('btn-save-news').innerText = 'บรอดแคสต์ / บันทึกประกาศ';
     document.getElementById('btn-save-news').style.background = 'var(--danger)';
@@ -353,6 +359,49 @@
   };
 
   window.deleteNews = function(id) { if(confirm("ลบประกาศนี้?")) remove(ref(db, `news/${id}`)); };
+
+  // REALTIME USER MONITORING SYSTEM
+  let mapUsersMonitor = L.map('map-users-monitor').setView([defaultLat, defaultLng], 12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapUsersMonitor);
+  let userRadarLayer = L.layerGroup().addTo(mapUsersMonitor);
+
+  onValue(ref(db, 'active_users'), (snapshot) => {
+    userRadarLayer.clearLayers();
+    let activeCount = 0;
+    const now = Date.now();
+
+    if (snapshot.exists()) {
+      snapshot.forEach(child => {
+        const u = child.val();
+        // ตรวจสอบว่าเป็นผู้ใช้ออนไลน์จริง (อัปเดตตำแหน่งย้อนหลังไม่เกิน 5 นาที)
+        if (u.lat && u.lng && (now - (u.lastPing || 0) < 5 * 60 * 1000)) {
+          activeCount++;
+          const secAgo = Math.round((now - (u.lastPing || now)) / 1000);
+
+          const radarIcon = L.divIcon({
+            className: 'custom-radar-icon',
+            html: `
+              <div class="radar-marker-container">
+                <div class="radar-ring"></div>
+                <div class="radar-dot"></div>
+              </div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+          });
+
+          const m = L.marker([u.lat, u.lng], { icon: radarIcon });
+          m.bindPopup(`
+            <div style="font-family:'Kanit'; text-align:center;">
+              <strong style="color:var(--radar);">👤 ผู้ใช้งานออนไลน์</strong><br>
+              <span style="font-size:0.8rem; color:var(--text-muted);">อัปเดตล่าสุด: ${secAgo} วินาทีที่แล้ว</span>
+            </div>
+          `);
+          userRadarLayer.addLayer(m);
+        }
+      });
+    }
+    document.getElementById('total-active-users').innerText = activeCount;
+  });
 
   // DATA LOADERS
   onValue(ref(db, 'categories'), snap => {
@@ -471,6 +520,7 @@
     defaultLat = pos.coords.latitude; defaultLng = pos.coords.longitude;
     if(!editPlaceId) mapPlaces.setView([defaultLat, defaultLng], 14);
     if(!editNewsId) mapNews.setView([defaultLat, defaultLng], 12);
+    mapUsersMonitor.setView([defaultLat, defaultLng], 12);
   });
 </script>
 </body>
