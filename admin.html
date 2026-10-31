@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - KK Smart City</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root { 
+      --primary: #0ea5e9; --primary-hover: #0284c7;
+      --bg-dark: #09090b; --card-dark: #18181b; --card-light: #27272a;
+      --text-main: #f4f4f5; --text-muted: #a1a1aa;
+      --danger: #ef4444; --warning: #f59e0b; --border-color: #3f3f46; --success: #10b981;
+    }
+    body { font-family: 'Kanit', sans-serif; margin: 0; padding: 10px; background-color: var(--bg-dark); color: var(--text-main); font-size: 0.9rem; }
+    #admin-content { max-width: 1400px; margin: 0 auto; }
+    
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 10px; }
+    .admin-header h2 { color: var(--primary); margin: 0; font-size: 1.3rem; }
+    
+    .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+    .tab-btn { background: var(--card-light); color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; font-weight: 500; transition: 0.2s; }
+    .tab-btn:hover { background: var(--card-dark); color: var(--text-main); }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .admin-layout { display: grid; grid-template-columns: 380px 1fr; gap: 10px; align-items: start; }
+    .panel { background: var(--card-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .panel-header h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .full-width { grid-column: span 2; }
+    label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+    input, select, textarea { width: 100%; padding: 6px 8px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; font-family: 'Kanit', sans-serif; box-sizing: border-box; font-size: 0.85rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-family: 'Kanit'; transition: 0.2s; text-align: center; }
+    .btn-danger { background: var(--danger); }
+    .btn-warning { background: var(--warning); color: #000; }
+    .btn-small { padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; background: var(--card-light); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; }
+    
+    .map-admin { height: 220px; width: 100%; border-radius: 4px; z-index: 1; border: 1px solid var(--border-color); }
+    
+    .data-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: calc(100vh - 160px); overflow-y: auto; padding-right: 5px; }
+    .data-list::-webkit-scrollbar, .global-reviews::-webkit-scrollbar { width: 4px; }
+    .data-list::-webkit-scrollbar-thumb, .global-reviews::-webkit-scrollbar-thumb { background: #52525b; border-radius: 2px; }
+    
+    .data-item { background: var(--card-light); padding: 10px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border-color); }
+    .data-item img { width: 100%; height: 90px; object-fit: cover; border-radius: 4px; margin: 6px 0; background: var(--bg-dark); }
+    .data-title { color: var(--primary); font-size: 0.95rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .global-reviews { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 120px); overflow-y: auto; }
+    .review-row { background: var(--card-light); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; }
+    .review-content h4 { margin: 0 0 4px 0; color: var(--primary); font-size: 1rem; }
+    .review-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; }
+    .review-stars { color: var(--warning); letter-spacing: 2px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; justify-content: center; align-items: center; }
+    .modal-content { background: var(--card-dark); padding: 15px; border-radius: 8px; width: 90%; max-width: 450px; border: 1px solid var(--border-color); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 10px; }
+    .modal-header h3 { margin: 0; color: var(--primary); font-size: 1.1rem; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
+  </style>
+</head>
+<body>
+
+<div id="admin-content">
+  <div class="admin-header">
+    <h2>ศูนย์ควบคุม (Admin Dashboard)</h2>
+    <div>
+      <a href="index.html" class="btn" style="background:var(--card-light); text-decoration:none; margin-right:5px; font-size:0.75rem;">← หน้าผู้ใช้</a>
+      <button class="btn" style="background:#52525b; font-size:0.75rem;" onclick="location.reload()">รีเฟรชระบบ</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="btn-tab-places" onclick="switchTab('places')">📍 จัดการสถานที่</button>
+    <button class="tab-btn" id="btn-tab-news" onclick="switchTab('news')">⚠️ ข่าวประกาศ/แจ้งเตือน</button>
+    <button class="tab-btn" id="btn-tab-reviews" onclick="switchTab('reviews')">⭐ จัดการรีวิว</button>
+  </div>
+  
+  <!-- TAB 1: PLACES -->
+  <div id="content-places" class="tab-content active">
+    <div class="admin-layout">
+      <div class="panel">
+        <div id="edit-banner-places" style="background:var(--warning); color:#000; padding:6px; text-align:center; border-radius:4px; margin-bottom:8px; font-weight:500; font-size:0.85rem; display:none;">✏️ โหมดแก้ไขสถานที่</div>
+        <div class="form-grid">
+          <div class="full-width">
+            <label>ระบุพิกัด (คลิกบนแผนที่)</label>
+            <div id="map-places" class="map-admin"></div>
+          </div>
+          <div><label>พิกัด</label><input type="text" id="place-latlng" readonly></div>
+          <div><label>ชื่อสถานที่</label><input type="text" id="place-name"></div>
+          <div>
+            <label>หมวดหมู่ <button class="btn-small" onclick="openCatModal()">+ จัดการ</button></label>
+            <select id="place-category"><option>กำลังโหลด...</option></select>
+          </div>
+          <div><label>รูปภาพ (ถ้ามี)</label><input type="file" id="place-img" accept="image/*"></div>
+          <div class="full-width"><label>รายละเอียด</label><textarea id="place-desc" rows="2"></textarea></div>
+          <div class="full-width" style="display:flex; gap:8px;">
+            <button class="btn full-width" id="btn-save-place" style="flex:2;">บันทึกสถานที่</button>
+            <button class="btn" id="btn-cancel-place" style="display:none; flex:1; background:#52525b;" onclick="cancelEditPlace()">ยกเลิก</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>รายการสถานที่ (<span id="total-places">0</span>)</h3></div>
+        <div id="list-places" class="data-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: NEWS / ALERTS -->
+  <div id="content-news" class="tab-content">
+    <div class="admin-layout">
+      <div class="panel">
+        <div id="edit-banner-news" style="background:var(--warning); color:#000; padding:6px; text-align:center; border-radius:4px; margin-bottom:8px; font-weight:500; font-size:0.85rem; display:none;">✏️ โหมดแก้ไขประกาศ</div>
+        <div class="form-grid">
+          <div class="full-width">
+            <label>ระบุพิกัดเหตุการณ์ (คลิกบนแผนที่)</label>
+            <div id="map-news" class="map-admin"></div>
+          </div>
+          <div><label>พิกัด</label><input type="text" id="news-latlng" readonly></div>
+          <div>
+            <label>รัศมีแจ้งเตือน (กม.)</label>
+            <input type="number" id="news-radius" value="50" min="1" onchange="updateNewsCircle()">
+          </div>
+          <div class="full-width">
+            <label>ระยะเวลาแจ้งเตือน (จำนวนวัน)</label>
+            <input type="number" id="news-duration" value="1" min="1" placeholder="เช่น 1 วัน, 3 วัน">
+          </div>
+          <div class="full-width"><label>หัวข้อประกาศ / ข่าว</label><input type="text" id="news-title"></div>
+          <div class="full-width"><label>รูปภาพแนบ (ถ้ามี)</label><input type="file" id="news-img" accept="image/*"></div>
+          <div class="full-width"><label>รายละเอียดเหตุการณ์</label><textarea id="news-desc" rows="2"></textarea></div>
+          <div class="full-width" style="display:flex; gap:8px;">
+            <button class="btn full-width" id="btn-save-news" style="background:var(--danger); flex:2;">บรอดแคสต์ / บันทึกประกาศ</button>
+            <button class="btn" id="btn-cancel-news" style="display:none; flex:1; background:#52525b;" onclick="cancelEditNews()">ยกเลิก</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>ประกาศปัจจุบัน (<span id="total-news">0</span>)</h3></div>
+        <div id="list-news" class="data-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: GLOBAL REVIEWS -->
+  <div id="content-reviews" class="tab-content">
+    <div class="panel">
+      <div class="panel-header"><h3>รายการรีวิวทั้งหมดจากทุกสถานที่</h3></div>
+      <div id="list-reviews" class="global-reviews"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Category -->
+<div id="admin-cat-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header"><h3>จัดการหมวดหมู่</h3><button class="close-btn" onclick="document.getElementById('admin-cat-modal').style.display='none'">×</button></div>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="new-cat-name" placeholder="ชื่อหมวดหมู่ใหม่..." style="margin:0;">
+      <button class="btn" onclick="addCategory()">เพิ่ม</button>
+    </div>
+    <div id="cat-list-container" style="margin-top:10px; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+  import { getDatabase, ref, push, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMptdLpLEdbeVFKZj82M0gyoV2m_2y5Pk", authDomain: "suchartstudio-9a78d.firebaseapp.com",
+    databaseURL: "https://suchartstudio-9a78d-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "suchartstudio-9a78d",
+    storageBucket: "suchartstudio-9a78d.firebasestorage.app", messagingSenderId: "953369646185", appId: "1:953369646185:web:02e6872662daa81f6ebef8"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let allPlacesDict = {};
+  let defaultLat = 16.4322, defaultLng = 102.8236;
+
+  window.switchTab = function(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('content-' + tabName).classList.add('active');
+    document.getElementById('btn-tab-' + tabName).classList.add('active');
+    
+    if(tabName === 'places') mapPlaces.invalidateSize();
+    if(tabName === 'news') mapNews.invalidateSize();
+  };
+
+  // PLACES SYSTEM
+  let mapPlaces, markerPlaces;
+  let pLat = defaultLat, pLng = defaultLng;
+  let currentPlaceImg = "", editPlaceId = null, existingPlaceImg = "";
+
+  mapPlaces = L.map('map-places').setView([pLat, pLng], 13);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPlaces);
+  
+  mapPlaces.on('click', e => {
+    pLat = e.latlng.lat; pLng = e.latlng.lng;
+    if(markerPlaces) mapPlaces.removeLayer(markerPlaces);
+    markerPlaces = L.marker([pLat, pLng]).addTo(mapPlaces);
+    document.getElementById('place-latlng').value = `${pLat.toFixed(5)}, ${pLng.toFixed(5)}`;
+  });
+
+  document.getElementById('place-img').addEventListener('change', e => compressImage(e, res => currentPlaceImg = res));
+
+  document.getElementById('btn-save-place').addEventListener('click', () => {
+    const name = document.getElementById('place-name').value, cat = document.getElementById('place-category').value, desc = document.getElementById('place-desc').value;
+    if(!name || !desc) return alert('กรอกข้อมูลไม่ครบ');
+    const payload = { name, category: cat, description: desc, lat: pLat, lng: pLng, image: currentPlaceImg || existingPlaceImg, timestamp: Date.now() };
+    
+    if(editPlaceId) update(ref(db, `places/${editPlaceId}`), payload).then(() => { alert('อัปเดตแล้ว'); cancelEditPlace(); });
+    else push(ref(db, 'places'), payload).then(() => { alert('บันทึกแล้ว'); cancelEditPlace(); });
+  });
+
+  window.editPlace = function(id, name, cat, desc, lat, lng, img) {
+    editPlaceId = id; existingPlaceImg = img; currentPlaceImg = "";
+    document.getElementById('place-name').value = name; document.getElementById('place-category').value = cat;
+    document.getElementById('place-desc').value = desc; document.getElementById('place-img').value = '';
+    pLat = lat; pLng = lng;
+    if(markerPlaces) mapPlaces.removeLayer(markerPlaces);
+    markerPlaces = L.marker([lat, lng]).addTo(mapPlaces);
+    mapPlaces.setView([lat, lng], 16);
+    document.getElementById('place-latlng').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    
+    document.getElementById('edit-banner-places').style.display = 'block';
+    document.getElementById('btn-save-place').innerText = 'อัปเดตสถานที่';
+    document.getElementById('btn-save-place').style.background = 'var(--warning)';
+    document.getElementById('btn-save-place').style.color = '#000';
+    document.getElementById('btn-cancel-place').style.display = 'block';
+    window.scrollTo(0,0);
+  };
+
+  window.cancelEditPlace = function() {
+    editPlaceId = null; existingPlaceImg = ""; currentPlaceImg = "";
+    document.getElementById('place-name').value = ''; document.getElementById('place-desc').value = ''; document.getElementById('place-img').value = '';
+    document.getElementById('edit-banner-places').style.display = 'none';
+    document.getElementById('btn-save-place').innerText = 'บันทึกสถานที่';
+    document.getElementById('btn-save-place').style.background = 'var(--primary)';
+    document.getElementById('btn-save-place').style.color = 'white';
+    document.getElementById('btn-cancel-place').style.display = 'none';
+  };
+
+  window.deletePlace = function(id) {
+    if(confirm("ลบสถานที่และรีวิวทั้งหมดของที่นี่?")) { remove(ref(db, `places/${id}`)); remove(ref(db, `reviews/${id}`)); }
+  };
+
+  // NEWS & ALERTS SYSTEM
+  let mapNews, markerNews, circleNews;
+  let nLat = defaultLat, nLng = defaultLng;
+  let currentNewsImg = "", editNewsId = null, existingNewsImg = "";
+
+  mapNews = L.map('map-news').setView([nLat, nLng], 12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapNews);
+  
+  mapNews.on('click', e => {
+    nLat = e.latlng.lat; nLng = e.latlng.lng;
+    updateNewsCircle();
+  });
+
+  window.updateNewsCircle = function() {
+    if(!nLat) return;
+    const rKm = document.getElementById('news-radius').value || 50;
+    const rMeters = rKm * 1000;
+    
+    if(markerNews) mapNews.removeLayer(markerNews);
+    if(circleNews) mapNews.removeLayer(circleNews);
+    
+    markerNews = L.marker([nLat, nLng]).addTo(mapNews);
+    circleNews = L.circle([nLat, nLng], { color: 'red', fillColor: '#ef4444', fillOpacity: 0.2, radius: rMeters }).addTo(mapNews);
+    document.getElementById('news-latlng').value = `${nLat.toFixed(5)}, ${nLng.toFixed(5)}`;
+    mapNews.fitBounds(circleNews.getBounds(), { padding: [20,20] });
+  };
+
+  document.getElementById('news-img').addEventListener('change', e => compressImage(e, res => currentNewsImg = res));
+
+  document.getElementById('btn-save-news').addEventListener('click', () => {
+    const title = document.getElementById('news-title').value;
+    const desc = document.getElementById('news-desc').value;
+    const rad = document.getElementById('news-radius').value;
+    const durationDays = parseFloat(document.getElementById('news-duration').value) || 1;
+    
+    if(!title || !desc || !nLat) return alert('กรอกข้อมูลและปักหมุดบนแผนที่ให้ครบ');
+    
+    const endTimestamp = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
+
+    const payload = { 
+      title, 
+      description: desc, 
+      lat: nLat, 
+      lng: nLng, 
+      radius: rad, 
+      durationDays: durationDays,
+      endDate: endTimestamp,
+      image: currentNewsImg || existingNewsImg, 
+      timestamp: Date.now() 
+    };
+
+    if(editNewsId) {
+      update(ref(db, `news/${editNewsId}`), payload).then(() => {
+        alert('อัปเดตข่าวประกาศสำเร็จ');
+        cancelEditNews();
+      });
+    } else {
+      push(ref(db, 'news'), payload).then(() => { 
+        alert('ส่งประกาศสำเร็จ'); 
+        cancelEditNews();
+      });
+    }
+  });
+
+  window.editNews = function(id, title, desc, rad, durationDays, lat, lng, img) {
+    editNewsId = id; existingNewsImg = img; currentNewsImg = "";
+    document.getElementById('news-title').value = title;
+    document.getElementById('news-desc').value = desc;
+    document.getElementById('news-radius').value = rad;
+    document.getElementById('news-duration').value = durationDays || 1;
+    document.getElementById('news-img').value = '';
+    
+    nLat = lat; nLng = lng;
+    updateNewsCircle();
+    
+    document.getElementById('edit-banner-news').style.display = 'block';
+    document.getElementById('btn-save-news').innerText = 'อัปเดตประกาศข่าวสาร';
+    document.getElementById('btn-save-news').style.background = 'var(--warning)';
+    document.getElementById('btn-save-news').style.color = '#000';
+    document.getElementById('btn-cancel-news').style.display = 'block';
+    window.scrollTo(0,0);
+  };
+
+  window.cancelEditNews = function() {
+    editNewsId = null; existingNewsImg = ""; currentNewsImg = "";
+    document.getElementById('news-title').value = '';
+    document.getElementById('news-desc').value = '';
+    document.getElementById('news-radius').value = '50';
+    document.getElementById('news-duration').value = '1';
+    document.getElementById('news-img').value = '';
+    
+    document.getElementById('edit-banner-news').style.display = 'none';
+    document.getElementById('btn-save-news').innerText = 'บรอดแคสต์ / บันทึกประกาศ';
+    document.getElementById('btn-save-news').style.background = 'var(--danger)';
+    document.getElementById('btn-save-news').style.color = 'white';
+    document.getElementById('btn-cancel-news').style.display = 'none';
+  };
+
+  window.deleteNews = function(id) { if(confirm("ลบประกาศนี้?")) remove(ref(db, `news/${id}`)); };
+
+  // DATA LOADERS
+  onValue(ref(db, 'categories'), snap => {
+    const sel = document.getElementById('place-category'), lst = document.getElementById('cat-list-container');
+    if(!snap.exists()) { push(ref(db, 'categories'), {name:"ทั่วไป"}); return; }
+    sel.innerHTML = ''; lst.innerHTML = '';
+    snap.forEach(c => {
+      const n = c.val().name, s = n.replace(/'/g, "\\'");
+      sel.innerHTML += `<option value="${n}">${n}</option>`;
+      lst.innerHTML += `<div style="display:flex; justify-content:space-between; background:var(--bg-dark); padding:6px; border:1px solid var(--border-color); border-radius:4px;"><span>${n}</span><button class="btn btn-danger btn-small" onclick="remove(ref(db, 'categories/${c.key}'))">ลบ</button></div>`;
+    });
+  });
+
+  onValue(ref(db, 'places'), snap => {
+    const c = document.getElementById('list-places'); c.innerHTML = '';
+    let count = 0; allPlacesDict = {};
+    if(snap.exists()) {
+      snap.forEach(ch => {
+        count++; const d = ch.val(), id = ch.key;
+        allPlacesDict[id] = d.name;
+        const sName = d.name.replace(/'/g, "\\'"), sDesc = d.description.replace(/'/g, "\\'"), sImg = d.image ? d.image.replace(/'/g, "\\'") : '';
+        c.innerHTML += `
+          <div class="data-item">
+            <div>
+              <div style="display:flex; justify-content:space-between;"><div class="data-title">${d.name}</div><span style="font-size:0.75rem; color:var(--warning);">${d.category}</span></div>
+              ${d.image ? `<img src="${d.image}">` : `<div style="height:90px; background:#3f3f46; display:flex; align-items:center; justify-content:center; color:#a1a1aa; font-size:0.75rem; margin:6px 0;">ไม่มีรูป</div>`}
+            </div>
+            <div style="display:flex; gap:4px; margin-top:8px;">
+              <button class="btn btn-warning btn-small" style="flex:1;" onclick="editPlace('${id}','${sName}','${d.category}','${sDesc}',${d.lat},${d.lng},'${sImg}')">แก้ไข</button>
+              <button class="btn btn-danger btn-small" style="flex:1;" onclick="deletePlace('${id}')">ลบ</button>
+            </div>
+          </div>`;
+      });
+    }
+    document.getElementById('total-places').innerText = count;
+  });
+
+  onValue(ref(db, 'news'), snap => {
+    const c = document.getElementById('list-news'); c.innerHTML = '';
+    let count = 0;
+    if(snap.exists()) {
+      snap.forEach(ch => {
+        count++; const d = ch.val(), id = ch.key;
+        const days = d.durationDays || 1;
+        const sTitle = d.title.replace(/'/g, "\\'"), sDesc = d.description.replace(/'/g, "\\'"), sImg = d.image ? d.image.replace(/'/g, "\\'") : '';
+        
+        c.innerHTML += `
+          <div class="data-item">
+            <div>
+              <div class="data-title" style="color:var(--danger);">${d.title}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">รัศมี: ${d.radius} กม. • ระยะเวลา: ${days} วัน</div>
+              ${d.image ? `<img src="${d.image}">` : ''}
+              <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);">${d.description}</div>
+            </div>
+            <div style="display:flex; gap:4px; margin-top:8px;">
+              <button class="btn btn-warning btn-small" style="flex:1;" onclick="editNews('${id}','${sTitle}','${sDesc}',${d.radius},${days},${d.lat},${d.lng},'${sImg}')">แก้ไข</button>
+              <button class="btn btn-danger btn-small" style="flex:1;" onclick="deleteNews('${id}')">ลบ</button>
+            </div>
+          </div>`;
+      });
+    }
+    document.getElementById('total-news').innerText = count;
+  });
+
+  onValue(ref(db, 'reviews'), snap => {
+    const c = document.getElementById('list-reviews'); c.innerHTML = '';
+    if(!snap.exists()) { c.innerHTML = '<div style="color:#a1a1aa; text-align:center;">ยังไม่มีรีวิวในระบบ</div>'; return; }
+    let allReviews = [];
+    snap.forEach(placeNode => {
+      const placeId = placeNode.key;
+      placeNode.forEach(revNode => {
+        allReviews.push({ placeId, reviewId: revNode.key, ...revNode.val() });
+      });
+    });
+    allReviews.sort((a, b) => b.timestamp - a.timestamp);
+    allReviews.forEach(r => {
+      const pName = allPlacesDict[r.placeId] || 'สถานที่ถูกลบไปแล้ว';
+      const date = new Date(r.timestamp).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'short' });
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      c.innerHTML += `
+        <div class="review-row">
+          <div class="review-content">
+            <h4>${pName}</h4>
+            <div class="review-meta"><span class="review-stars">${stars}</span> • ${date}</div>
+            <div style="font-size:0.85rem;">${r.text}</div>
+          </div>
+          <button class="btn btn-danger btn-small" onclick="if(confirm('ลบรีวิวนี้?')) remove(ref(db, 'reviews/${r.placeId}/${r.reviewId}'))">ลบ</button>
+        </div>
+      `;
+    });
+  });
+
+  function compressImage(e, callback) {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600; canvas.height = img.height * (600 / img.width);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.6));
+      }
+      img.src = ev.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+  
+  window.openCatModal = () => document.getElementById('admin-cat-modal').style.display='flex';
+  window.addCategory = () => {
+    const input = document.getElementById('new-cat-name');
+    if(input.value.trim()) push(ref(db, 'categories'), {name: input.value.trim()}).then(()=>input.value='');
+  }
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    defaultLat = pos.coords.latitude; defaultLng = pos.coords.longitude;
+    if(!editPlaceId) mapPlaces.setView([defaultLat, defaultLng], 14);
+    if(!editNewsId) mapNews.setView([defaultLat, defaultLng], 12);
+  });
+</script>
+</body>
+</html>
