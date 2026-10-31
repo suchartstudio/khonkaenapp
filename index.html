@@ -31,6 +31,8 @@
     .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .filter-btn.nearby { border-color: var(--success); color: var(--success); }
     .filter-btn.nearby.active { background: var(--success); color: white; }
+    .filter-btn.add-place { background: var(--primary); color: white; border-color: var(--primary); font-weight: 500; }
+    .filter-btn.add-place:hover { background: var(--primary-hover); }
     
     /* Places List */
     .places-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
@@ -90,7 +92,7 @@
 
     /* Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; justify-content: center; align-items: center; }
-    .modal-content { background: var(--card-dark); padding: 20px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 80vh; display: flex; flex-direction: column; border: 1px solid var(--border-color); }
+    .modal-content { background: var(--card-dark); padding: 20px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 85vh; display: flex; flex-direction: column; border: 1px solid var(--border-color); box-sizing: border-box; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
     .modal-header h2 { margin: 0; color: var(--primary); font-size: 1.3rem; }
     .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
@@ -99,8 +101,12 @@
     .review-item { background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
     .review-stars { color: var(--warning); margin-bottom: 5px; font-size: 1.1rem; }
     .review-form { display: flex; flex-direction: column; gap: 10px; background: var(--card-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
-    .rating-select select, .review-form textarea { width: 100%; padding: 8px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-family: 'Kanit'; box-sizing: border-box; }
-    .btn-submit { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; }
+    .rating-select select, .review-form textarea, .add-place-form input, .add-place-form select, .add-place-form textarea { width: 100%; padding: 8px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-family: 'Kanit'; box-sizing: border-box; font-size: 0.9rem; }
+    .btn-submit { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; font-weight: 500; }
+    .btn-submit:hover { background: var(--primary-hover); }
+
+    .add-place-form { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .add-place-form label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: -6px; }
 
     .alert-card { border-left: 4px solid var(--danger); }
     .alert-badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-bottom: 8px; }
@@ -118,6 +124,7 @@
       <div class="filters" id="category-filters">
         <button class="filter-btn active" id="btn-filter-all" onclick="filterPlaces('all')">ทั้งหมด</button>
         <button class="filter-btn nearby" id="btn-filter-nearby" onclick="filterPlaces('nearby')">📍 ใกล้ฉัน (&lt; 5 กม.)</button>
+        <button class="filter-btn add-place" onclick="openAddPlaceModal()">➕ เพิ่มสถานที่</button>
       </div>
       <div class="places-list" id="places-list">
         <div style="text-align:center; margin-top:20px; color:var(--text-muted);">กำลังโหลดข้อมูล...</div>
@@ -129,6 +136,38 @@
         <span id="toggle-map-icon">⛶</span> <span id="toggle-map-text">แผนที่เต็มจอ</span>
       </button>
       <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มสถานที่โดย User -->
+  <div id="add-place-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>➕ เพิ่มสถานที่ใหม่</h2>
+        <button class="close-btn" onclick="closeAddPlaceModal()">×</button>
+      </div>
+      <div class="add-place-form">
+        <div style="font-size:0.8rem; color:var(--success); background:rgba(16,185,129,0.15); padding:8px; border-radius:6px; border:1px solid var(--success);">
+          ✔ ผ่านการตรวจสอบ: คุณอยู่ในรัศมีระยะไม่เกิน 15 กม. จากศูนย์กลางเมืองขอนแก่น
+        </div>
+        <label>ชื่อสถานที่ *</label>
+        <input type="text" id="user-place-name" placeholder="เช่น ร้านกาแฟขอนแก่น คาเฟ่">
+        
+        <label>หมวดหมู่ *</label>
+        <select id="user-place-cat"><option>กำลังโหลด...</option></select>
+        
+        <label>พิกัดสถานที่ (ละติจูด, ลองจิจูด)</label>
+        <input type="text" id="user-place-latlng" readonly style="background:#18181b; color:var(--text-muted);">
+        <div style="font-size:0.75rem; color:var(--text-muted);">* ระบบใช้พิกัดปัจจุบันของคุณ หากต้องการเปลี่ยนพิกัดสามารถคลิกบนแผนที่ได้เลย</div>
+
+        <label>รายละเอียด / ข้อมูลติดต่อ</label>
+        <textarea id="user-place-desc" rows="3" placeholder="ระบุรายละเอียด เช่น เวลาเปิด-ปิด เมนูแนะนำ..."></textarea>
+        
+        <label>แนบรูปภาพสถานที่ (ถ้ามี)</label>
+        <input type="file" id="user-place-img" accept="image/*">
+        
+        <button class="btn-submit" onclick="submitUserPlace()">บันทึกสถานที่ลงแผนที่</button>
+      </div>
     </div>
   </div>
 
@@ -196,6 +235,10 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // จุดศูนย์กลางเมืองขอนแก่น (เสาหลักเมือง/ศาลากลาง)
+  const KK_CITY_CENTER = L.latLng(16.4322, 102.8236);
+  const MAX_ADD_DISTANCE_KM = 15;
+
   const map = L.map('map', { zoomControl: false }).setView([16.4322, 102.8236], 13);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   
@@ -206,6 +249,9 @@
 
   let allPlaces = [];
   let allNews = [];
+  let userPickedLatLng = null;
+  let tempPickMarker = null;
+  let userPlaceImgData = "";
   
   let markersLayer = L.markerClusterGroup({
     showCoverageOnHover: false,
@@ -226,28 +272,27 @@
     setTimeout(() => map.invalidateSize(), 300);
   };
 
-  // --- เพิ่มส่วนลงทะเบียน Realtime User Presence ---
+  // Realtime User Presence Track
   const userSessionId = 'usr_' + Math.random().toString(36).substring(2, 9);
   const userPresenceRef = ref(db, `active_users/${userSessionId}`);
 
   navigator.geolocation.getCurrentPosition((pos) => {
     userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    userPickedLatLng = userLatLng;
+
     L.circleMarker(userLatLng, {
       color: 'white', fillColor: '#3b82f6', fillOpacity: 1, radius: 8, weight: 2
     }).addTo(map).bindPopup("📍 ตำแหน่งปัจจุบันของคุณ");
     map.setView(userLatLng, 13);
     
-    // ส่งพิกัดเข้า Firebase หน้า Monitor
     set(userPresenceRef, {
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
       lastPing: Date.now()
     });
 
-    // ลบข้อมูลเมื่อปิดเว็บ
     onDisconnect(userPresenceRef).remove();
 
-    // Heartbeat ping ทุก 30 วินาที
     setInterval(() => {
       if (userLatLng) {
         set(userPresenceRef, {
@@ -261,8 +306,91 @@
     checkNewsProximity();
     if(allPlaces.length > 0) renderPlaces();
   }, (err) => {
-    console.warn("ไม่สามารถดึงตำแหน่งได้");
+    console.warn("ไม่สามารถดึงตำแหน่ง GPS ได้");
   });
+
+  // คลิกแผนที่เพื่อเลือกพิกัดตอนเพิ่มสถานที่
+  map.on('click', (e) => {
+    if (document.getElementById('add-place-modal').style.display === 'flex') {
+      userPickedLatLng = e.latlng;
+      if (tempPickMarker) map.removeLayer(tempPickMarker);
+      tempPickMarker = L.marker(userPickedLatLng).addTo(map).bindPopup("📍 พิกัดสถานที่ใหม่ที่คุณเลือก").openPopup();
+      document.getElementById('user-place-latlng').value = `${userPickedLatLng.lat.toFixed(5)}, ${userPickedLatLng.lng.toFixed(5)}`;
+    }
+  });
+
+  // ระบบตรวจสอบการเพิ่มสถานที่ (จำกัดระยะ 15 กม. จากศูนย์กลางเมืองขอนแก่น)
+  window.openAddPlaceModal = function() {
+    if (!userLatLng) {
+      alert("⚠️ กรุณาเปิดระบบ GPS บนอุปกรณ์ของคุณ และอนุญาตการเข้าถึงตำแหน่งก่อนเพิ่มสถานที่");
+      return;
+    }
+
+    const distFromCenterKm = userLatLng.distanceTo(KK_CITY_CENTER) / 1000;
+    if (distFromCenterKm > MAX_ADD_DISTANCE_KM) {
+      alert(`⛔ ไม่สามารถเพิ่มสถานที่ได้!\n\nคุณไม่อยู่ในพื้นที่อนุญาต โดยตำแหน่งปัจจุบันของคุณอยู่ห่างจากศูนย์กลางเมืองขอนแก่น ${distFromCenterKm.toFixed(1)} กม. (ระบบอนุญาตเฉพาะระยะไม่เกิน ${MAX_ADD_DISTANCE_KM} กม.)`);
+      return;
+    }
+
+    userPickedLatLng = userLatLng;
+    document.getElementById('user-place-latlng').value = `${userLatLng.lat.toFixed(5)}, ${userLatLng.lng.toFixed(5)}`;
+    document.getElementById('add-place-modal').style.display = 'flex';
+  };
+
+  window.closeAddPlaceModal = function() {
+    document.getElementById('add-place-modal').style.display = 'none';
+    if (tempPickMarker) map.removeLayer(tempPickMarker);
+  };
+
+  document.getElementById('user-place-img').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600; 
+        canvas.height = img.height * (600 / img.width);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        userPlaceImgData = canvas.toDataURL('image/jpeg', 0.6);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  window.submitUserPlace = function() {
+    const name = document.getElementById('user-place-name').value.trim();
+    const category = document.getElementById('user-place-cat').value;
+    const description = document.getElementById('user-place-desc').value.trim();
+
+    if (!name || !category) {
+      alert("กรุณากรอกชื่อสถานที่และเลือกหมวดหมู่ให้ครบถ้วน");
+      return;
+    }
+
+    const payload = {
+      name: name,
+      category: category,
+      description: description,
+      lat: userPickedLatLng.lat,
+      lng: userPickedLatLng.lng,
+      image: userPlaceImgData,
+      timestamp: Date.now()
+    };
+
+    push(ref(db, 'places'), payload).then(() => {
+      alert("🎉 บันทึกสถานที่ลงแผนที่เรียบร้อยแล้ว!");
+      document.getElementById('user-place-name').value = '';
+      document.getElementById('user-place-desc').value = '';
+      document.getElementById('user-place-img').value = '';
+      userPlaceImgData = "";
+      closeAddPlaceModal();
+    }).catch(err => {
+      alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+    });
+  };
 
   function getCategoryIcon(category) {
     let color = '#10b981';
@@ -316,17 +444,24 @@
 
   onValue(ref(db, 'categories'), (snapshot) => {
     const filterContainer = document.getElementById('category-filters');
-    document.querySelectorAll('.filter-btn:not(#btn-filter-all):not(#btn-filter-nearby)').forEach(e => e.remove());
+    const userCatSelect = document.getElementById('user-place-cat');
+    document.querySelectorAll('.filter-btn:not(#btn-filter-all):not(#btn-filter-nearby):not(.add-place)').forEach(e => e.remove());
+    userCatSelect.innerHTML = '';
     
     if (snapshot.exists()) {
       snapshot.forEach(child => {
         const catName = child.val().name;
+        
+        // เพิ่มใน Filter
         const btn = document.createElement('button');
         btn.className = 'filter-btn';
         btn.id = `btn-filter-${catName}`;
         btn.innerText = catName;
         btn.onclick = () => filterPlaces(catName);
-        filterContainer.appendChild(btn);
+        filterContainer.insertBefore(btn, filterContainer.querySelector('.add-place'));
+
+        // เพิ่มใน Select แบบฟอร์ม
+        userCatSelect.innerHTML += `<option value="${catName}">${catName}</option>`;
       });
     }
     updateActiveFilterBtn();
