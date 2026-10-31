@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ขอนแก่นแอพ</title>
+  <title>ระบบบริหารจัดการภายใน</title>
   
   <!-- เชื่อมต่อ Manifest -->
   <link rel="manifest" href="manifest.json">
@@ -12,19 +12,38 @@
   <!-- รองรับ iOS (iPad) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ขอนแก่น">
+  <meta name="apple-mobile-web-app-title" content="ระบบราชการ">
   <link rel="apple-touch-icon" href="https://github.com/suchartstudio/khonkaen/blob/main/logo.png?raw=true">
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background-color: #1e3a8a; }
-    iframe { width: 100%; height: 100%; border: none; display: block; }
+    
+    /* คอนเทนเนอร์สำหรับตัดส่วนบาร์ด้านบนออก */
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: -38px; /* ดันขอบบนขึ้นเพื่อซ่อนแถบเตือน Google */
+      left: 0;
+      width: 100%;
+      height: calc(100% + 38px); /* ชดเชยความสูงที่โดนดันขึ้น */
+      border: none;
+      display: block;
+    }
   </style>
 </head>
 <body>
 
-  <!-- ฝัง Web App URL ของคุณ -->
-  <iframe src="https://script.google.com/macros/s/AKfycbyoJGjYGbvLx1mGtGIZG6Sy1nHc8i1oKHagd7LpSN6-Vx1M339_XBr7N9mqtSgxeuQi/exec"></iframe>
+  <!-- คอนเทนเนอร์ฝัง Web App URL ใหม่ -->
+  <div class="iframe-wrapper">
+    <iframe src="https://script.google.com/macros/s/AKfycbyoJGjYGbvLx1mGtGIZG6Sy1nHc8i1oKHagd7LpSN6-Vx1M339_XBr7N9mqtSgxeuQi/exec"></iframe>
+  </div>
 
   <script>
     // ลงทะเบียน Service Worker สำหรับ PWA
