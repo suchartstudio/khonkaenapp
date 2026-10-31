@@ -5,49 +5,142 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบบริหารจัดการภายใน</title>
   
-  <!-- เพิ่ม Favicon เพื่อแก้ปัญหา 404 -->
+  <!-- Favicon & Icons -->
   <link rel="icon" href="https://github.com/suchartstudio/khonkaen/blob/main/logo.png?raw=true" type="image/png">
+  <link rel="apple-touch-icon" href="https://github.com/suchartstudio/khonkaen/blob/main/logo.png?raw=true">
   
-  <!-- เชื่อมต่อ Manifest -->
+  <!-- PWA Manifest & Colors -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1e3a8a">
   
-  <!-- รองรับ Mobile Web App (แก้เตือน Deprecated) -->
+  <!-- รองรับ Mobile Web App -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ระบบราชการ">
-  <link rel="apple-touch-icon" href="https://github.com/suchartstudio/khonkaen/blob/main/logo.png?raw=true">
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background-color: #1e3a8a; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f3f4f6;
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
     
-    .iframe-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+    header {
+      background-color: #1e3a8a;
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .iframe-wrapper iframe {
-      position: absolute;
-      top: -38px; /* เลื่อนซ่อนแถบบาร์ Google */
-      left: 0;
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    nav a {
+      color: #e0e7ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    nav a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1000px;
       width: 100%;
-      height: calc(100% + 38px);
-      border: none;
-      display: block;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #6b7280;
     }
   </style>
 </head>
 <body>
 
-  <div class="iframe-wrapper">
-    <iframe src="https://script.google.com/macros/s/AKfycbyoJGjYGbvLx1mGtGIZG6Sy1nHc8i1oKHagd7LpSN6-Vx1M339_XBr7N9mqtSgxeuQi/exec"></iframe>
-  </div>
+  <header>
+    <h1 id="app-title">ระบบบริหารจัดการภายใน</h1>
+    <nav>
+      <a href="?page=user">หน้าหลัก</a>
+      <a href="?page=admin">ผู้ดูแลระบบ</a>
+    </nav>
+  </header>
+
+  <main id="app-content">
+    <div class="card loading">
+      <p>กำลังโหลดข้อมูลระบบ...</p>
+    </div>
+  </main>
 
   <script>
+    // URL สำหรับเรียกใช้งาน API จาก Google Apps Script
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyoJGjYGbvLx1mGtGIZG6Sy1nHc8i1oKHagd7LpSN6-Vx1M339_XBr7N9mqtSgxeuQi/exec';
+
+    // ดึง Parameter จาก Query String (เช่น ?page=admin)
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPage = urlParams.get('page') || 'user';
+
+    // ฟังก์ชันดึงข้อมูลแบบ Asynchronous จาก Backend
+    async function loadAppData() {
+      const contentEl = document.getElementById('app-content');
+      const titleEl = document.getElementById('app-title');
+
+      try {
+        const response = await fetch(`${API_URL}?action=getPage&page=${currentPage}`);
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          document.title = data.title;
+          titleEl.textContent = data.title;
+          
+          contentEl.innerHTML = `
+            <div class="card">
+              <h2>${data.content.header}</h2>
+              <p style="margin-top: 0.75rem; color: #4b5563; line-height: 1.6;">${data.content.message}</p>
+            </div>
+          `;
+        } else {
+          throw new Error(data.message || 'เกิดข้อผิดพลาดในการรับข้อมูล');
+        }
+      } catch (error) {
+        console.error('API Error:', error);
+        contentEl.innerHTML = `
+          <div class="card" style="border-left: 4px solid #ef4444;">
+            <h3 style="color: #ef4444;">ไม่สามารถดึงข้อมูลได้</h3>
+            <p style="margin-top: 0.5rem; color: #6b7280;">กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หรือตั้งค่าการ Deployment ใน Apps Script</p>
+          </div>
+        `;
+      }
+    }
+
+    // โหลดข้อมูลเมื่อ DOM พร้อมทำงาน
+    window.addEventListener('DOMContentLoaded', loadAppData);
+
     // ลงทะเบียน Service Worker สำหรับ PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
