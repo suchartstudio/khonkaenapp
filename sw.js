@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gov-app-pwa-v1';
+const CACHE_NAME = 'gov-app-pwa-v2';
 const urlsToCache = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {
