@@ -13,11 +13,11 @@
       --text-main: #f4f4f5; --text-muted: #a1a1aa;
       --danger: #ef4444; --warning: #f59e0b; --border-color: #3f3f46; --success: #10b981; --radar: #06b6d4;
     }
-    body { font-family: 'Kanit', sans-serif; margin: 0; padding: 10px; background-color: var(--bg-dark); color: var(--text-main); font-size: 0.9rem; }
-    #admin-content { max-width: 1400px; margin: 0 auto; }
+    body { font-family: 'Kanit', sans-serif; margin: 0; padding: 12px 16px; background-color: var(--bg-dark); color: var(--text-main); font-size: 0.9rem; box-sizing: border-box; }
+    #admin-content { width: 100%; max-width: 100%; margin: 0; box-sizing: border-box; }
     
-    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 10px; }
-    .admin-header h2 { color: var(--primary); margin: 0; font-size: 1.3rem; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; }
+    .admin-header h2 { color: var(--primary); margin: 0; font-size: 1.4rem; }
     
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; }
     .tab-btn { background: var(--card-light); color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Kanit'; font-weight: 500; transition: 0.2s; white-space: nowrap; }
@@ -26,30 +26,31 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .admin-layout { display: grid; grid-template-columns: 380px 1fr; gap: 10px; align-items: start; }
-    .panel { background: var(--card-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .panel-header h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
+    .admin-layout { display: grid; grid-template-columns: 460px 1fr; gap: 14px; align-items: start; }
+    .panel { background: var(--card-dark); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .panel-header h3 { margin: 0; font-size: 1.05rem; color: var(--text-main); }
     
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .full-width { grid-column: span 2; }
-    label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
-    input, select, textarea { width: 100%; padding: 6px 8px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; font-family: 'Kanit', sans-serif; box-sizing: border-box; font-size: 0.85rem; }
+    label { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+    input, select, textarea { width: 100%; padding: 7px 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; font-family: 'Kanit', sans-serif; box-sizing: border-box; font-size: 0.88rem; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
     
-    .btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-family: 'Kanit'; transition: 0.2s; text-align: center; }
+    .btn { background: var(--primary); color: white; border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 0.88rem; font-family: 'Kanit'; transition: 0.2s; text-align: center; }
     .btn-danger { background: var(--danger); }
     .btn-warning { background: var(--warning); color: #000; }
-    .btn-small { padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; background: var(--card-light); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; }
+    .btn-small { padding: 3px 8px; font-size: 0.78rem; border-radius: 4px; background: var(--card-light); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; }
     
-    .map-admin { height: 220px; width: 100%; border-radius: 4px; z-index: 1; border: 1px solid var(--border-color); }
+    /* ขยายขนาดแผนที่ให้ใหญ่ขึ้น */
+    .map-admin { height: 420px; width: 100%; border-radius: 6px; z-index: 1; border: 1px solid var(--border-color); }
     
-    .data-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: calc(100vh - 160px); overflow-y: auto; padding-right: 5px; }
+    .data-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; max-height: calc(100vh - 160px); overflow-y: auto; padding-right: 5px; }
     .data-list::-webkit-scrollbar, .global-reviews::-webkit-scrollbar { width: 4px; }
     .data-list::-webkit-scrollbar-thumb, .global-reviews::-webkit-scrollbar-thumb { background: #52525b; border-radius: 2px; }
     
     .data-item { background: var(--card-light); padding: 10px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border-color); }
-    .data-item img { width: 100%; height: 90px; object-fit: cover; border-radius: 4px; margin: 6px 0; background: var(--bg-dark); }
+    .data-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin: 6px 0; background: var(--bg-dark); }
     .data-title { color: var(--primary); font-size: 0.95rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
     .global-reviews { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 120px); overflow-y: auto; }
@@ -58,7 +59,7 @@
     .review-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; }
     .review-stars { color: var(--warning); letter-spacing: 2px; }
 
-    /* CSS Radar Pulse Animation for Users Monitor */
+    /* CSS Radar Pulse Animation */
     .custom-radar-icon { background: none; border: none; }
     .radar-marker-container { position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
     .radar-dot { width: 10px; height: 10px; background-color: var(--radar); border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px var(--radar); z-index: 2; }
@@ -73,6 +74,10 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 10px; }
     .modal-header h3 { margin: 0; color: var(--primary); font-size: 1.1rem; }
     .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
+    
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -100,26 +105,42 @@
   <div id="content-places" class="tab-content active">
     <div class="admin-layout">
       <div class="panel">
-        <div id="edit-banner-places" style="background:var(--warning); color:#000; padding:6px; text-align:center; border-radius:4px; margin-bottom:8px; font-weight:500; font-size:0.85rem; display:none;">✏️ โหมดแก้ไขสถานที่</div>
+        <div id="edit-banner-places" style="background:var(--warning); color:#000; padding:6px; text-align:center; border-radius:4px; margin-bottom:10px; font-weight:500; font-size:0.85rem; display:none;">✏️ โหมดแก้ไขสถานที่</div>
+        
         <div class="form-grid">
           <div class="full-width">
-            <label>ระบุพิกัด (คลิกบนแผนที่)</label>
+            <label>🔍 ค้นหาชื่อสถานที่ หรือ วางพิกัด (เช่น 16.4322, 102.8236)</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="place-search-input" placeholder="พิมพ์ชื่อสถานที่ หรือ วางพิกัด Lat, Lng..." onkeypress="if(event.key==='Enter') searchOrGoToLatLng()">
+              <button class="btn" onclick="searchOrGoToLatLng()" style="white-space:nowrap; background:var(--primary);">🔍 ค้นหา/ปักหมุด</button>
+            </div>
+          </div>
+
+          <div class="full-width">
+            <label>ระบุพิกัดบนแผนที่ (คลิกเพื่อเลื่อนหมุด)</label>
             <div id="map-places" class="map-admin"></div>
           </div>
-          <div><label>พิกัด</label><input type="text" id="place-latlng" readonly></div>
-          <div><label>ชื่อสถานที่</label><input type="text" id="place-name"></div>
+          
+          <div class="full-width">
+            <label>ค่าพิกัด (Latitude, Longitude) *ปรับแก้ไขได้*</label>
+            <input type="text" id="place-latlng" placeholder="16.4322, 102.8236" onchange="parseManualLatLngInput()">
+          </div>
+
+          <div class="full-width"><label>ชื่อสถานที่</label><input type="text" id="place-name"></div>
           <div>
             <label>หมวดหมู่ <button class="btn-small" onclick="openCatModal()">+ จัดการ</button></label>
             <select id="place-category"><option>กำลังโหลด...</option></select>
           </div>
           <div><label>รูปภาพ (ถ้ามี)</label><input type="file" id="place-img" accept="image/*"></div>
           <div class="full-width"><label>รายละเอียด</label><textarea id="place-desc" rows="2"></textarea></div>
+          
           <div class="full-width" style="display:flex; gap:8px;">
             <button class="btn full-width" id="btn-save-place" style="flex:2;">บันทึกสถานที่</button>
             <button class="btn" id="btn-cancel-place" style="display:none; flex:1; background:#52525b;" onclick="cancelEditPlace()">ยกเลิก</button>
           </div>
         </div>
       </div>
+      
       <div class="panel">
         <div class="panel-header"><h3>รายการสถานที่ (<span id="total-places">0</span>)</h3></div>
         <div id="list-places" class="data-list"></div>
@@ -135,7 +156,7 @@
         <div class="form-grid">
           <div class="full-width">
             <label>ระบุพิกัดเหตุการณ์ (คลิกบนแผนที่)</label>
-            <div id="map-news" class="map-admin"></div>
+            <div id="map-news" class="map-admin" style="height:250px;"></div>
           </div>
           <div><label>พิกัด</label><input type="text" id="news-latlng" readonly></div>
           <div>
@@ -270,15 +291,56 @@
   let pLat = defaultLat, pLng = defaultLng;
   let currentPlaceImg = "", editPlaceId = null, existingPlaceImg = "";
 
-  mapPlaces = L.map('map-places').setView([pLat, pLng], 13);
+  mapPlaces = L.map('map-places').setView([pLat, pLng], 14);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPlaces);
   
   mapPlaces.on('click', e => {
-    pLat = e.latlng.lat; pLng = e.latlng.lng;
+    updatePlaceMapPos(e.latlng.lat, e.latlng.lng);
+  });
+
+  function updatePlaceMapPos(lat, lng) {
+    pLat = lat; pLng = lng;
     if(markerPlaces) mapPlaces.removeLayer(markerPlaces);
     markerPlaces = L.marker([pLat, pLng]).addTo(mapPlaces);
+    mapPlaces.setView([pLat, pLng], 16);
     document.getElementById('place-latlng').value = `${pLat.toFixed(5)}, ${pLng.toFixed(5)}`;
-  });
+  }
+
+  // ระบบค้นหาชื่อสถานที่ หรือ ปักหมุดจากพิกัด Lat, Lng
+  window.searchOrGoToLatLng = function() {
+    const val = document.getElementById('place-search-input').value.trim();
+    if(!val) return alert("กรุณากรอกชื่อสถานที่หรือวางค่าพิกัด");
+
+    // ตรวจสอบว่าเป็นพิกัด Lat, Lng หรือไม่ (เช่น 16.4322, 102.8236)
+    const coordMatch = val.match(/^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[3]);
+      updatePlaceMapPos(lat, lng);
+    } else {
+      // ค้นหาชื่อสถานที่ผ่าน OpenStreetMap Nominatim API
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            updatePlaceMapPos(lat, lng);
+          } else {
+            alert('ไม่พบสถานที่จากการค้นหา กรุณาตรวจสอบคำค้นหาอีกครั้ง');
+          }
+        })
+        .catch(() => alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบค้นหา'));
+    }
+  };
+
+  window.parseManualLatLngInput = function() {
+    const val = document.getElementById('place-latlng').value.trim();
+    const parts = val.split(',').map(s => parseFloat(s.trim()));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      updatePlaceMapPos(parts[0], parts[1]);
+    }
+  };
 
   document.getElementById('place-img').addEventListener('change', e => compressImage(e, res => currentPlaceImg = res));
 
@@ -295,11 +357,7 @@
     editPlaceId = id; existingPlaceImg = img; currentPlaceImg = "";
     document.getElementById('place-name').value = name; document.getElementById('place-category').value = cat;
     document.getElementById('place-desc').value = desc; document.getElementById('place-img').value = '';
-    pLat = lat; pLng = lng;
-    if(markerPlaces) mapPlaces.removeLayer(markerPlaces);
-    markerPlaces = L.marker([lat, lng]).addTo(mapPlaces);
-    mapPlaces.setView([lat, lng], 16);
-    document.getElementById('place-latlng').value = `${lat.toFixed(5)}, ${lat.toFixed(5)}`;
+    updatePlaceMapPos(lat, lng);
     
     document.getElementById('edit-banner-places').style.display = 'block';
     document.getElementById('btn-save-place').innerText = 'อัปเดตสถานที่';
@@ -312,6 +370,7 @@
   window.cancelEditPlace = function() {
     editPlaceId = null; existingPlaceImg = ""; currentPlaceImg = "";
     document.getElementById('place-name').value = ''; document.getElementById('place-desc').value = ''; document.getElementById('place-img').value = '';
+    document.getElementById('place-search-input').value = '';
     document.getElementById('edit-banner-places').style.display = 'none';
     document.getElementById('btn-save-place').innerText = 'บันทึกสถานที่';
     document.getElementById('btn-save-place').style.background = 'var(--primary)';
@@ -443,11 +502,11 @@
     document.getElementById('total-active-users').innerText = activeCount;
   });
 
-  // COMMAND & CONTROL CENTER (ระบบควบคุมสถานการณ์แบบสมูท)
+  // COMMAND & CONTROL CENTER
   let mapCommand = L.map('map-command').setView([defaultLat, defaultLng], 12);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapCommand);
   let staffLayer = L.layerGroup().addTo(mapCommand);
-  let staffMarkers = {}; // เก็บ Object หมุดเพื่อป้องกันการเคลียร์ปิด Popup ซ้ำ
+  let staffMarkers = {};
 
   function getStaffDeptColor(dept) {
     if (dept === 'ตำรวจ') return '#ef4444';
@@ -470,10 +529,8 @@
           const color = getStaffDeptColor(stf.dept);
 
           if (staffMarkers[stf.id]) {
-            // อัปเดตเฉพาะตำแหน่ง ไม่ลบหมุดทิ้ง ป้องกัน Popup เด้งปิด
             staffMarkers[stf.id].setLatLng([stf.lat, stf.lng]);
           } else {
-            // สร้างหมุดใหม่เฉพาะเมื่อยังไม่มีหมุดเดิม
             const iconHtml = `
               <div style="background:${color}; color:white; padding:4px 8px; border-radius:12px; font-weight:500; font-size:0.75rem; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.5); white-space:nowrap;">
                 🚔 ${stf.name} (${stf.dept})
@@ -502,7 +559,6 @@
       });
     }
 
-    // ลบหมุดของเจ้าหน้าที่ที่ออฟไลน์ออก
     Object.keys(staffMarkers).forEach(id => {
       if (!activeStaffIds.has(id)) {
         staffLayer.removeLayer(staffMarkers[id]);
@@ -548,7 +604,7 @@
           <div class="data-item">
             <div>
               <div style="display:flex; justify-content:space-between;"><div class="data-title">${d.name}</div><span style="font-size:0.75rem; color:var(--warning);">${d.category}</span></div>
-              ${d.image ? `<img src="${d.image}">` : `<div style="height:90px; background:#3f3f46; display:flex; align-items:center; justify-content:center; color:#a1a1aa; font-size:0.75rem; margin:6px 0;">ไม่มีรูป</div>`}
+              ${d.image ? `<img src="${d.image}">` : `<div style="height:100px; background:#3f3f46; display:flex; align-items:center; justify-content:center; color:#a1a1aa; font-size:0.75rem; margin:6px 0;">ไม่มีรูป</div>`}
             </div>
             <div style="display:flex; gap:4px; margin-top:8px;">
               <button class="btn btn-warning btn-small" style="flex:1;" onclick="editPlace('${id}','${sName}','${d.category}','${sDesc}',${d.lat},${d.lng},'${sImg}')">แก้ไข</button>
@@ -639,7 +695,7 @@
 
   navigator.geolocation.getCurrentPosition(pos => {
     defaultLat = pos.coords.latitude; defaultLng = pos.coords.longitude;
-    if(!editPlaceId) mapPlaces.setView([defaultLat, defaultLng], 14);
+    if(!editPlaceId) updatePlaceMapPos(defaultLat, defaultLng);
     if(!editNewsId) mapNews.setView([defaultLat, defaultLng], 12);
     mapUsersMonitor.setView([defaultLat, defaultLng], 12);
     mapCommand.setView([defaultLat, defaultLng], 12);
